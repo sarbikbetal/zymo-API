@@ -7,6 +7,7 @@ const socketio = require('socket.io');
 const NodeCache = require("node-cache");
 const Sentry = require('@sentry/node');
 const enforce = require('express-sslify');
+const cors = require('cors')
 
 // Inits
 const app = express();
@@ -22,15 +23,14 @@ if (process.env.NODE_ENV === 'production') {
         trustProtoHeader: true
     }));
 }
-// Use helmet middleware
+ 
+app.use(cors());
 app.use(helmet());
 
-// Sentry Init
 Sentry.init({
     dsn: process.env.SENTRY_DSN
 });
 
-// //// Sentry Error reporting ///////
 app.use(Sentry.Handlers.requestHandler());
 
 // Normal route handlers. 
@@ -49,6 +49,7 @@ app.get('/cache-stats', (req, res) => {
 })
 
 app.use(Sentry.Handlers.errorHandler());
+
 
 // Socket io server handler
 io.on('connection', (socket) => {
