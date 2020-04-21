@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const socketio = require('socket.io');
 const NodeCache = require("node-cache");
 const Sentry = require('@sentry/node');
+const enforce = require('express-sslify');
 
 // Inits
 const app = express();
@@ -15,7 +16,12 @@ const roomCache = new NodeCache({
     stdTTL: 7200
 });
 
-
+// Check for production env and upgrade to https
+if (process.env.NODE_ENV === 'production') {
+    app.use(enforce.HTTPS({
+        trustProtoHeader: true
+    }));
+}
 // Use helmet middleware
 app.use(helmet());
 
@@ -43,14 +49,6 @@ app.get('/cache-stats', (req, res) => {
 })
 
 app.use(Sentry.Handlers.errorHandler());
-
-
-// Check for production env and upgrade to https
-if (process.env.NODE_ENV === 'production') {
-    app.use(enforce.HTTPS({
-        trustProtoHeader: true
-    }));
-}
 
 // Socket io server handler
 io.on('connection', (socket) => {
